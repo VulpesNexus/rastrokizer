@@ -39,7 +39,7 @@
  *                  irreducible for a stroke on its own layer: the live render composites the
  *                  content and stroke in one buffer and antialiases their shared boundary with a
  *                  single coverage, while two layers composite it twice.  See
- *                  STROKE_FIDELITY_MECHANISM_INVESTIGATION.md.
+ *                  docs/LIMITATIONS.md.
  *   refused        Inside and Center strokes (Create Layers is exact for Inside on a group),
  *                  gradient and pattern strokes, styles with any other effect, masked or
  *                  clipped groups, and groups containing a text layer (fine concave detail

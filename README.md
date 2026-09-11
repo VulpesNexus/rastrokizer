@@ -1,65 +1,33 @@
 # Rastrokizer
 
-A Photoshop script that moves a group's Outside stroke onto its own pixel layer, faithfully, in one history step.
+Move a Photoshop group's Outside stroke onto its own pixel layer, faithfully, in one history step.
+
+<p align="center"><img src="Comparison.png" alt="Three stacked renders of the words 'billion-dollar company btw' in white with a red outline. Top, the live group stroke. Middle, the broken Create Layers result, with the stroke thickened and clipped at the corners. Bottom, the Rastrokizer result, which matches the live one." width="460"></p>
 
 ## Why
 
-*Layer > Layer Style > Create Layers* is wrong when the styled layer is a group, and has been since at least Photoshop 23.4.1 (2022), when users first reported it; it is still unfixed in Photoshop 2026 (27.9.1). It rebuilds each effect from the group's composite with the whole style already applied, then clips the result to the group's original effect bounds. An 8 px Outside stroke comes out 8 px along straight edges but about 16 px on the diagonal: doubled and squared. The same command is exact on a plain layer, and so are *Merge Group* and *Rasterize Layer Style* on a group, so this script builds the layer from those instead.
+*Layer > Layer Style > Create Layers* is meant to turn a layer's live effects into ordinary layers, but on a **group** it gets the Outside stroke wrong — and has since at least Photoshop 23.4.1 (2022), still unfixed in Photoshop 2026 (27.9.1). It rebuilds the stroke from the group's finished composite and clips it to the original bounds, so an 8 px stroke comes out about 8 px along straight edges but roughly 16 px into the corners: doubled and squared (the middle panel above). *Merge Group*, *Rasterize Layer Style*, and *Create Layers* on a plain layer are all exact, so Rastrokizer builds the stroke layer from those instead (the bottom panel).
 
 ## Use
 
-Select the group, then *File > Scripts > Browse…* and pick *Rastrokizer.jsx*. The group's Stroke moves to a new layer directly below it, named after the group ("Border's Outer Stroke" for a group named "Border") and carrying the stroke's own blend mode. Everything else about the group is left exactly as it was: its blend mode, opacity, fill, knockout, Blend If, and the rest of its blending options all survive, because only the Stroke is removed and nothing is reset. It is one history step, so *Undo* reverts everything. The script replaces whatever layer style you last copied with *Copy Layer Style*.
+Select the group, then *File > Scripts > Browse…* and pick *Rastrokizer.jsx*. The group's Stroke moves to a new layer directly below it, named after the group — `Border's Outer Stroke` for a group named `Border` — and carrying the stroke's own blend mode. Everything else about the group is left exactly as it was: blend mode, opacity, fill, knockout, Blend If, and the rest all survive, because only the Stroke is removed and nothing is reset. It is one history step, so *Undo* reverts everything. (The script overwrites whatever you last copied with *Copy Layer Style*.)
 
-## What it converts, and how faithfully
+<p align="center"><img src="Layering%20Demo.png" alt="A Photoshop Layers panel with three groups: a Live group holding a live Stroke effect, a Vanilla group with a separate Outer Stroke layer below it, and a Rastrokizer group with its own Outer Stroke layer directly below it."></p>
 
-Every number below is a measured difference from the live render (premultiplied RGBA, 256 px fixtures over an opaque backdrop, Photoshop 27.9.1). "Exact" is 0 px.
+## What it handles
 
-| Configuration | Result |
-| --- | --- |
-| Pass Through or Normal group, 100 % opacity and fill, opaque content | **exact** |
-| Any of the 27 stroke blend modes | **exact** (copied onto the new layer; Dissolve stays Normal) |
-| The occluding group modes (Multiply, Darken, and the rest that hide the content) | **exact** |
-| Group fill 0 %; group opacity 1 % | **exact** |
-| Smart-object children, rectangles, hard, concave, and 55 %-partial-alpha content, two children | **exact** |
-| Stroke sizes 0.5 to 250 px; RGB, Grayscale, CMYK, and Lab; 8, 16, and 32 bit | **exact** |
-| The non-occluding group modes (Screen, Hue, Overlay, …) | edge only: a one-pixel band at the content/stroke join, at most about 70/255 |
-| Group opacity or fill below 100 % | edge only, same band; above 75 % a faint tint over the content instead (3/255 at 99 %) |
-| Stroke at less than 100 % opacity | edge only, at most 54/255 at 1 % falling to 1/255 at 99 % |
-| Knockout (Shallow or Deep) | edge only, same band; the group keeps its knockout |
+Measured against Photoshop's live render (premultiplied, 256 px fixtures, Photoshop 27.9.1); "exact" is a 0 px difference.
 
-The edge band is inherent to a stroke on its own layer: the live effect is composited with the content in one pass, a separate layer in two. It is provably irreducible for a separated layer, because the shared coverage at the join is held once in Photoshop's single buffer and cannot be reconstructed from the two layers' alphas. See the mechanism investigation in the workspace audit for the pixel arithmetic.
-
-It **refuses**, with the reason in a dialog: Inside and Center strokes (*Create Layers* is exact for an Inside stroke on a group, so use that), gradient and pattern strokes, styles with any other effect, masked or clipped groups, and groups containing a live text layer (fine glyph detail diverges by up to 40/255; rasterize the text first).
-
-## How it works
-
-1. Duplicate the group, clear the copy's style (which also resets the copy to 100 % opacity and fill, so the merged silhouette is the true full-alpha content), and merge it.
-2. *Copy Layer Style* and *Paste Layer Style* onto the merged layer, then rasterize: the children plus the stroke exactly as Photoshop renders them. Photoshop's own copy is used because a stroke rebuilt from a read-back descriptor loses the half pixel of a fractional size.
-3. Rasterize a Color Overlay in the stroke's color: solid stroke color on the stroked silhouette. That solid disc is exact for a Pass Through or Normal group at 100/100, because the opaque content covers it just as Photoshop's own Outer Stroke sits under the layer. For any other mode, or opacity or fill below 75 %, the content's own alpha is subtracted and only the ring is kept.
-4. Place it below the group, give it the stroke's blend mode, and remove the group's Stroke non-destructively: a write that rewrites the group's style with an empty Stroke slot. This touches nothing else, so the group keeps its blend mode, opacity, fill, knockout, Blend If, and every other blending option with no reset.
-
-Two facts about Photoshop drive the design. A group's Outer Stroke is rendered outside the group's blend mode and opacity, so the layer must sit below the group rather than inside it. And *Clear Layer Style* resets opacity, fill, and knockout to their defaults, which is why it is used only on the throwaway copy in step 1, where the reset to full alpha is wanted, and never on the group itself, whose Stroke is removed by the empty-slot write instead.
-
-## As an Action
-
-Every step is an ordinary command, so the same result can be recorded as an Action, and in one respect a better one: *Create Layers* is exact on a plain layer and is recordable through *Insert Menu Item*, which makes the construction color, gradient, and pattern agnostic. An Action cannot restore opacity and fill dynamically, so it is safe only for groups at 100/100.
-
-With a document open, a group carrying an Outside stroke selected, and the *Layers* panel visible:
-
-1. *Window > Actions*, then from the panel menu *New Set…*, then *New Action…* and *Record*.
-2. *Layer > Layer Style > Copy Layer Style*.
-3. *Layer > Duplicate Group…*, then *OK*. The copy is selected, above the original.
-4. *Layer > Layer Style > Clear Layer Style* (on the copy).
-5. *Layer > Merge Group* (*Ctrl+E*). The copy becomes a plain layer.
-6. *Layer > Layer Style > Paste Layer Style*.
-7. From the *Actions* panel menu, *Insert Menu Item…*, then choose *Layer > Layer Style > Create Layers* from the menu bar and click *OK*. This records the step without running it.
-8. Now really run *Layer > Layer Style > Create Layers* from the menu so the document catches up (this records nothing). The merged content layer should still be highlighted, with the Outer Stroke layer directly below it.
-9. *Alt+[* twice: select backward past the Outer Stroke onto the original group. (If the Outer Stroke was highlighted after step 8, press it once.)
-10. *Ctrl+]* (*Bring Forward*): the original group moves above the Outer Stroke.
-11. *Layer > Layer Style > Clear Layer Style* (on the original group).
-12. *Alt+]* (select forward) onto the merged content layer, then *Layer > Delete > Layer*.
-13. Stop recording. Test on a throwaway document, then on a group with a different name: every step is relative, so none depends on layer names.
+- **Exact:** Pass Through or Normal groups at 100 % opacity and fill over opaque content; all 27 stroke blend modes; the occluding group modes (Multiply, Darken, and the rest that hide the content); group fill 0 %; stroke sizes 0.5–250 px; RGB, Grayscale, CMYK, and Lab; 8, 16, and 32 bit; smart objects, rectangles, hard and concave silhouettes, and multiple children.
+- **A one-pixel edge band** — at most about 68/255, right where the content meets the stroke — for the non-occluding group modes (Screen, Overlay, Hue, and the rest), group opacity or fill below 100 %, a stroke below 100 % opacity, and knockout. This band is *provably irreducible* for a stroke on its own layer; see [the known limitations](docs/LIMITATIONS.md).
+- **Refused, with the reason in a dialog:** Inside and Center strokes, gradient and pattern strokes, live text, a style with any other effect, and masked or clipped groups. For Inside and gradient strokes the [Action recipe](docs/AS_AN_ACTION.md) is exact.
 
 ## Verifying
 
 *verify/verify.jsx* builds each case twice, exports the live render and the converted render, and *verify/grade.py* compares them and checks the group's structure. Run it with *verify/run.ps1* from a PowerShell prompt while Photoshop 2026 is open with no documents you care about; it only ever touches documents it creates.
+
+## Documentation
+
+- [Known limitations](docs/LIMITATIONS.md) — every divergence and refusal, each shown to be a Photoshop limit or a scoped choice with an exact alternative, with the pixel math.
+- [How it works](docs/HOW_IT_WORKS.md) — the construction step by step, and why removing the Stroke is non-destructive.
+- [Recording it as an Action](docs/AS_AN_ACTION.md) — the same result as a Photoshop Action, which also handles gradient, pattern, and Inside strokes.
