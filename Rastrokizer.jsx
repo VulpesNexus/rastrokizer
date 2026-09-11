@@ -1,10 +1,10 @@
-/* Rastrokizer -- put a group's Outside Stroke on its own layer, faithfully.
+/* Rastrokizer: put a group's Outside stroke on its own layer, faithfully.
  *
  * Why: in Photoshop 27.9.1, Layer > Layer Style > Create Layers on a GROUP does not build its
  * effect layers from the group's children.  It rebuilds them from the group's composite with
  * the whole style already applied, then clips each one to the group's original effect bounds.
- * An Outside Stroke therefore comes out about twice as wide: the clip hides that along straight
- * edges, and the stroke bulges out square towards corners and curves.  Merge Group and
+ * An Outside stroke therefore comes out about twice as wide: the clip hides that along straight
+ * edges, and the stroke bulges out square toward corners and curves.  Merge Group and
  * Rasterize Layer Style are exact on groups, and so is Create Layers on a plain layer, so this
  * builds the layer from those instead:
  *
@@ -14,19 +14,19 @@
  *   2. Copy and Paste Layer Style onto it and rasterize: the children plus the Stroke, exactly
  *      as rendered.  Photoshop's own copy is used because rebuilding the Stroke from a read-back
  *      descriptor lost the half pixel of a 4.5 px Stroke;
- *   3. rasterize a Color Overlay in the Stroke's colour over that: solid stroke colour on the
+ *   3. rasterize a Color Overlay in the Stroke's color over that: solid stroke color on the
  *      stroked silhouette.  For a Pass Through or Normal group at 100% opacity and fill that
  *      solid disc is pixel-exact, because the opaque content covers it just as Photoshop's own
- *      Outer Stroke sits under the layer.  For any other group mode, opacity or fill, the
+ *      Outer Stroke sits under the layer.  For any other group mode, opacity, or fill, the
  *      disc would show through the content, so the content's own alpha is subtracted and only
  *      the ring is kept;
  *   4. place it directly below the group, give it the Stroke's own blend mode, clear the
- *      group's style, and restore the group's blend mode, opacity and fill -- Clear Layer
- *      Style silently resets the last two to 100.
+ *      group's style, and restore the group's blend mode, opacity, and fill (Clear Layer
+ *      Style silently resets the last two to 100).
  *
  * Measured fidelity against the live render (premultiplied, 256 px fixtures, 2026-09-11):
  *   exact (0 px)   Pass Through / Normal groups at 100/100; every one of the 27 stroke blend
- *                  modes; Screen, Difference and Lighten groups; a Screen group at 50%; fill 0;
+ *                  modes; Screen, Difference, and Lighten groups; a Screen group at 50%; fill 0;
  *                  smart-object children; rectangles and partial-alpha content; sizes 0.5-250;
  *                  RGB/Gray/CMYK/Lab, 8/16/32 bit.
  *   edge only      the antialiased join between content and stroke can differ by up to about
@@ -133,7 +133,7 @@ $.global.Rastrokizer = (function () {
         executeAction(cid('setd'), d, DialogModes.NO);
     }
 
-    /* A Color Overlay in the Stroke's colour and nothing else, so no size is re-encoded. */
+    /* A Color Overlay in the Stroke's color and nothing else, so no size is re-encoded. */
     function setOverlay(doc, layer, stroke) {
         var overlay = new ActionDescriptor();
         overlay.putBoolean(cid('enab'), true);
@@ -273,7 +273,7 @@ $.global.Rastrokizer = (function () {
             throw new Error('The Stroke is not Outside; only Outside is verified.');
         }
         if (enumOf(stroke, 'paintType') !== 'solidColor') {
-            throw new Error('The Stroke is not a solid colour; the recolour step would destroy '
+            throw new Error('The Stroke is not a solid color; the recolor step would destroy '
                             + 'a gradient or pattern.');
         }
         if (hasTextLayer(group.layers)) {
@@ -302,7 +302,7 @@ $.global.Rastrokizer = (function () {
     function convert(doc, group) {
         var found = inspect(doc, group);
         var copy = group.duplicate();
-        clearStyle(doc, copy);                    // also normalises the copy to 100/100
+        clearStyle(doc, copy);                    // also normalizes the copy to 100/100
         copy.blendMode = BlendMode.PASSTHROUGH;
         var layer = copy.merge();                 // the children, exactly as drawn, full alpha
         var contentOnly = null;
@@ -316,7 +316,7 @@ $.global.Rastrokizer = (function () {
         pasteStyle(doc, layer);
         rasterizeStyle(doc, layer);               // children plus Stroke, exactly as rendered
         setOverlay(doc, layer, found.stroke);
-        rasterizeStyle(doc, layer);               // stroke colour, same alpha
+        rasterizeStyle(doc, layer);               // stroke color, same alpha
         if (contentOnly) { ringify(doc, layer, contentOnly); contentOnly.remove(); }
         layer.move(group, ElementPlacement.PLACEAFTER);
         layer.name = group.name + "'s Outer Stroke";

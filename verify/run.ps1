@@ -4,7 +4,7 @@ param(
     [string]$OutRoot = (Join-Path $PSScriptRoot 'out')
 )
 # Sends verify.jsx to the running Photoshop 2026 over COM, one job per call. It creates and
-# closes only its own throwaway documents and restores the active document afterwards.
+# closes only its own throwaway documents and restores the active document afterward.
 $ErrorActionPreference = 'Stop'
 $here = $PSScriptRoot
 $fix  = Join-Path (Split-Path $here -Parent) 'Rastrokizer.jsx'

@@ -24,7 +24,7 @@ function applyStyle(doc,group,c){
     var am=c.strokeMode?SM[c.strokeMode]:null; if(am){s.putEnumerated(cid('Md  '),cid('BlnM'),am[1]?cid(am[0]):sid(am[0]));}else{s.putEnumerated(cid('Md  '),cid('BlnM'),cid('Nrml'));}
     s.putUnitDouble(cid('Opct'),cid('#Prc'),c.strokeOpacity!==undefined?c.strokeOpacity:100);
     s.putUnitDouble(cid('Sz  '),cid('#Pxl'),c.size||8);
-    var col=c.colour?rgb(c.colour[0],c.colour[1],c.colour[2]):(c.gray?rgb(255,255,255):rgb(255,0,0));
+    var col=c.color?rgb(c.color[0],c.color[1],c.color[2]):(c.gray?rgb(255,255,255):rgb(255,0,0));
     s.putObject(cid('Clr '),cid('RGBC'),col);
     var fx=new ActionDescriptor(); fx.putUnitDouble(cid('Scl '),cid('#Prc'),100);
     if(c.extra==='dropShadow'){var ds=new ActionDescriptor();ds.putBoolean(cid('enab'),true);ds.putEnumerated(cid('Md  '),cid('BlnM'),cid('Nrml'));ds.putObject(cid('Clr '),cid('RGBC'),rgb(0,255,0));ds.putUnitDouble(cid('Opct'),cid('#Prc'),100);ds.putBoolean(cid('uglg'),false);ds.putUnitDouble(cid('lagl'),cid('#Ang'),90);ds.putUnitDouble(cid('Dstn'),cid('#Pxl'),0);ds.putUnitDouble(cid('Ckmt'),cid('#Pxl'),100);ds.putUnitDouble(cid('blur'),cid('#Pxl'),12);fx.putObject(cid('DrSh'),cid('DrSh'),ds);}
