@@ -10,9 +10,9 @@ Move a Photoshop group's outside stroke onto its own pixel layer, faithfully, in
 
 ## Use
 
-Select the group, then *File > Scripts > Browse…* and pick *Rastrokizer.jsx*. The group's Stroke moves to a new layer directly below it, named after the group — `Border's Outer Stroke` for a group named `Border` — and carrying the stroke's own blend mode. Everything else about the group is left exactly as it was: blend mode, opacity, fill, knockout, Blend If, and the rest all survive, because only the Stroke is removed and nothing is reset. It is one history step, so *Undo* reverts everything. (The script overwrites whatever you last copied with *Copy Layer Style*.)
+Select the group, then *File > Scripts > Browse…* and pick *Rastrokizer.jsx*. The group's stroke moves to a new layer directly below it, named after the group — `Border's Outer Stroke` for a group named `Border` — and carrying the stroke's own blend mode. Everything else about the group is left exactly as it was: blend mode, opacity, fill, knockout, Blend If, and the rest all survive, because only the stroke is removed and nothing is reset. It is one history step, so *Undo* reverts everything. (The script overwrites whatever you last copied with *Copy Layer Style*.)
 
-<p align="center"><img src="Layering%20Demo.png" alt="A Photoshop Layers panel with three groups: a Live group holding a live Stroke effect, a Vanilla group with a separate Outer Stroke layer below it, and a Rastrokizer group with its own Outer Stroke layer directly below it."></p>
+<p align="center"><img src="Layering%20Demo.png" alt="A Photoshop Layers panel with three groups: a Live group holding a live stroke effect, a Vanilla group with a separate Outer Stroke layer below it, and a Rastrokizer group with its own Outer Stroke layer directly below it."></p>
 
 ## What it handles
 
@@ -29,5 +29,5 @@ Measured against Photoshop's live render (premultiplied, 256 px fixtures, Photos
 ## Documentation
 
 - [Known limitations](docs/LIMITATIONS.md) — every divergence and refusal, each shown to be a Photoshop limit or a scoped choice with an exact alternative, with the pixel math.
-- [How it works](docs/HOW_IT_WORKS.md) — the construction step by step, and why removing the Stroke is non-destructive.
+- [How it works](docs/HOW_IT_WORKS.md) — the construction step by step, and why removing the stroke is non-destructive.
 - [Recording it as an Action](docs/AS_AN_ACTION.md) — the same result as a Photoshop Action, which also handles gradient, pattern, and Inside strokes.

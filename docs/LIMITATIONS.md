@@ -63,4 +63,4 @@ Several things an earlier audit recorded as limits were re-examined and are repr
 - **Blend If** is preserved on the group.
 - **The transparency-shapes flag** and the group's **opacity and fill** are preserved with no reset.
 
-The conversion removes only the Stroke and disturbs nothing else, so every other blending option rides along untouched. See [HOW_IT_WORKS.md](HOW_IT_WORKS.md) for the mechanism.
+The conversion removes only the stroke and disturbs nothing else, so every other blending option rides along untouched. See [HOW_IT_WORKS.md](HOW_IT_WORKS.md) for the mechanism.

@@ -11,18 +11,18 @@
  *   1. duplicate the group, clear the copy's style (this also resets the copy to 100% opacity
  *      and fill, which is wanted: the merged silhouette must be the true full-alpha content),
  *      and merge it into one pixel layer: the children exactly as drawn;
- *   2. Copy and Paste Layer Style onto it and rasterize: the children plus the Stroke, exactly
- *      as rendered.  Photoshop's own copy is used because rebuilding the Stroke from a read-back
- *      descriptor lost the half pixel of a 4.5 px Stroke;
- *   3. rasterize a Color Overlay in the Stroke's color over that: solid stroke color on the
+ *   2. Copy and Paste Layer Style onto it and rasterize: the children plus the stroke, exactly
+ *      as rendered.  Photoshop's own copy is used because rebuilding the stroke from a read-back
+ *      descriptor lost the half pixel of a 4.5 px stroke;
+ *   3. rasterize a Color Overlay in the stroke's color over that: solid stroke color on the
  *      stroked silhouette.  For a Pass Through or Normal group at 100% opacity and fill that
  *      solid disc is pixel-exact, because the opaque content covers it just as Photoshop's own
  *      Outer Stroke sits under the layer.  For any other group mode, opacity, or fill, the
  *      disc would show through the content, so the content's own alpha is subtracted and only
  *      the ring is kept;
- *   4. place it directly below the group, give it the Stroke's own blend mode, and remove the
- *      group's Stroke non-destructively: a setd that rewrites the group's style with an empty
- *      Stroke slot.  Unlike Clear Layer Style, this touches nothing else, so the group keeps
+ *   4. place it directly below the group, give it the stroke's own blend mode, and remove the
+ *      group's stroke non-destructively: a setd that rewrites the group's style with an empty
+ *      stroke slot.  Unlike Clear Layer Style, this touches nothing else, so the group keeps
  *      its blend mode, opacity, fill, and every advanced blending option (knockout, Blend If,
  *      transparency-shapes flag, and the rest) with no reset and no restore.
  *
@@ -34,7 +34,7 @@
  *   edge only      the antialiased join between content and stroke can differ by up to about
  *                  70/255 on a one-pixel band for: the non-occluding group modes (Screen, Hue,
  *                  Overlay, and the rest), group opacity or fill below 100, knockout, and a
- *                  Stroke at less than 100% opacity.  It widens to the whole silhouette when the
+ *                  stroke at less than 100% opacity.  It widens to the whole silhouette when the
  *                  content is itself partial-alpha everywhere (a gradient ramp).  This band is
  *                  irreducible for a stroke on its own layer: the live render composites the
  *                  content and stroke in one buffer and antialiases their shared boundary with a
@@ -117,7 +117,7 @@ $.global.Rastrokizer = (function () {
         executeAction(cid('setd'), d, DialogModes.NO);
     }
 
-    /* A Color Overlay in the Stroke's color and nothing else, so no size is re-encoded. */
+    /* A Color Overlay in the stroke's color and nothing else, so no size is re-encoded. */
     function setOverlay(doc, layer, stroke) {
         var overlay = new ActionDescriptor();
         overlay.putBoolean(cid('enab'), true);
@@ -131,9 +131,9 @@ $.global.Rastrokizer = (function () {
         setLayerEffects(doc, layer, fx);
     }
 
-    /* Remove the group's Stroke without disturbing anything else.  A setd on Lefx replaces the
-     * whole style object, so writing a style that holds only an empty Stroke list (frameFXMulti)
-     * leaves no Stroke and no other effect, while the layer's own blending options -- blend mode,
+    /* Remove the group's stroke without disturbing anything else.  A setd on Lefx replaces the
+     * whole style object, so writing a style that holds only an empty stroke list (frameFXMulti)
+     * leaves no stroke and no other effect, while the layer's own blending options -- blend mode,
      * opacity, fill, knockout, Blend If, the transparency-shapes flag -- are separate from Lefx
      * and ride through untouched.  Clear Layer Style, by contrast, resets opacity, fill, and
      * knockout, which is why it is used only on the throwaway copy, never on the group itself. */
@@ -227,28 +227,28 @@ $.global.Rastrokizer = (function () {
             throw new Error("The group's effects are switched off.");
         }
         var entries = effectEntries(fx);
-        if (!entries.length) { throw new Error('The group has no Stroke.'); }
+        if (!entries.length) { throw new Error('The group has no stroke.'); }
         if (entries.length > 1 || entries[0][0] !== 'frameFX') {
             var names = [];
             for (var i = 0; i < entries.length; i++) { names.push(entries[i][0]); }
-            throw new Error("The group's style is not a single Stroke (it holds " + names.join(', ')
-                            + '). Only that is verified, because the Stroke is removed with Clear '
+            throw new Error("The group's style is not a single stroke (it holds " + names.join(', ')
+                            + '). Only that is verified, because the stroke is removed with Clear '
                             + 'Layer Style, which would take the rest with it.');
         }
         var stroke = entries[0][1];
         if (stroke.hasKey(sid('enabled')) && !stroke.getBoolean(sid('enabled'))) {
-            throw new Error('The Stroke is switched off.');
+            throw new Error('The stroke is switched off.');
         }
         var position = enumOf(stroke, 'style');
         if (position === 'insetFrame') {
-            throw new Error('The Stroke is Inside. Layer Style > Create Layers measured exact for '
-                            + 'an Inside Stroke on a group, so use that.');
+            throw new Error('The stroke is Inside. Layer Style > Create Layers measured exact for '
+                            + 'an Inside stroke on a group, so use that.');
         }
         if (position !== 'outsetFrame') {
-            throw new Error('The Stroke is not outside; only outside is verified.');
+            throw new Error('The stroke is not outside; only outside is verified.');
         }
         if (enumOf(stroke, 'paintType') !== 'solidColor') {
-            throw new Error('The Stroke is not a solid color; the recolor step would destroy '
+            throw new Error('The stroke is not a solid color; the recolor step would destroy '
                             + 'a gradient or pattern.');
         }
         if (hasTextLayer(group.layers)) {
@@ -286,7 +286,7 @@ $.global.Rastrokizer = (function () {
         }
         copyStyle(doc, group);
         pasteStyle(doc, layer);
-        rasterizeStyle(doc, layer);               // children plus Stroke, exactly as rendered
+        rasterizeStyle(doc, layer);               // children plus stroke, exactly as rendered
         setOverlay(doc, layer, found.stroke);
         rasterizeStyle(doc, layer);               // stroke color, same alpha
         if (contentOnly) { ringify(doc, layer, contentOnly); contentOnly.remove(); }
@@ -296,7 +296,7 @@ $.global.Rastrokizer = (function () {
             && STROKE_MODE_TO_DOM[found.strokeMode]) {
             layer.blendMode = BlendMode[STROKE_MODE_TO_DOM[found.strokeMode]];
         }
-        removeStroke(doc, group);                 // empties the Stroke slot; keeps every blending option
+        removeStroke(doc, group);                 // empties the stroke slot; keeps every blending option
         doc.activeLayer = layer;
         return layer;
     }
