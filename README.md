@@ -31,3 +31,11 @@ Measured against Photoshop's live render (premultiplied, 256 px fixtures, Photos
 - [Known limitations](docs/LIMITATIONS.md) — every divergence and refusal, each shown to be a Photoshop limit or a scoped choice with an exact alternative, with the pixel math.
 - [How it works](docs/HOW_IT_WORKS.md) — the construction step by step, and why removing the stroke is non-destructive.
 - [Recording it as an Action](docs/AS_AN_ACTION.md) — the same result as a Photoshop Action, which also handles gradient, pattern, and Inside strokes.
+
+## License
+
+**GNU General Public License, version 3 or later** (`GPL-3.0-or-later`). The full text is in [LICENSE](LICENSE), and every source file carries an SPDX header.
+
+Rastrokizer is ExtendScript, so it links nothing and vendors no Adobe code; the plain GPL covers it without the SDK exception a compiled plugin needs. It comes with **no warranty**, and the [verification harness](#verifying) and the [known limitations](docs/LIMITATIONS.md) are what is offered instead of a promise.
+
+Copyright © 2026 Vixen420.

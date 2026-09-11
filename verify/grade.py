@@ -1,3 +1,12 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Vixen420
+#
+# Rastrokizer is free software: you may redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version. It comes with ABSOLUTELY NO WARRANTY. See the file LICENSE, or
+# <https://www.gnu.org/licenses/>, for the full text.
+
 """Grade a verify_v2 batch: pixels (live vs fixed, premultiplied, >2/255) AND structure from
 report.txt (converted cases must leave group G with effects=false and its opacity/fill as
 built; refused cases must be refused and untouched)."""

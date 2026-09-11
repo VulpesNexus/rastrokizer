@@ -1,3 +1,12 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Vixen420
+//
+// Rastrokizer is free software: you may redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free Software
+// Foundation, either version 3 of the License, or (at your option) any later
+// version. It comes with ABSOLUTELY NO WARRANTY. See the file LICENSE, or
+// <https://www.gnu.org/licenses/>, for the full text.
+
 /* Rastrokizer: put a group's outside stroke on its own layer, faithfully.
  *
  * Why: in Photoshop 27.9.1, Layer > Layer Style > Create Layers on a GROUP does not build its

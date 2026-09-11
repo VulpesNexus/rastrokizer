@@ -1,3 +1,12 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Vixen420
+//
+// Rastrokizer is free software: you may redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free Software
+// Foundation, either version 3 of the License, or (at your option) any later
+// version. It comes with ABSOLUTELY NO WARRANTY. See the file LICENSE, or
+// <https://www.gnu.org/licenses/>, for the full text.
+
 /* Verify Rastrokizer.jsx through its REAL inspect()/convert() on every
  * configuration the relaxed guard now accepts, plus the refusal envelope and the round-2
  * fidelity set.  Every case: build live, export; build again, convert (or record refusal),
