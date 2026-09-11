@@ -245,7 +245,7 @@ $.global.Rastrokizer = (function () {
                             + 'an Inside Stroke on a group, so use that.');
         }
         if (position !== 'outsetFrame') {
-            throw new Error('The Stroke is not Outside; only Outside is verified.');
+            throw new Error('The Stroke is not outside; only outside is verified.');
         }
         if (enumOf(stroke, 'paintType') !== 'solidColor') {
             throw new Error('The Stroke is not a solid color; the recolor step would destroy '
