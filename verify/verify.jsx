@@ -53,7 +53,10 @@ function build(c,tag){
 }
 function boundsOf(l){try{var b=l.bounds;return '['+b[0].value+','+b[1].value+','+b[2].value+','+b[3].value+']';}catch(e){return '?';}}
 function readFill(doc,layer){doc.activeLayer=layer;var L=executeActionGet(targetRef());var k=sid('fillOpacity');if(!L.hasKey(k))return 100;return L.getType(k)===DescValueType.UNITDOUBLE?Math.round(L.getUnitDoubleValue(k)):Math.round(L.getInteger(k)*100/255);}
-function describeTree(doc,layers,prefix){for(var i=0;i<layers.length;i++){var l=layers[i];var isG=l.typename==='LayerSet';doc.activeLayer=l;var fx=executeActionGet(targetRef()).hasKey(sid('layerEffects'));note(prefix+(isG?'group "':'layer "')+l.name+'" blend='+String(l.blendMode).replace('BlendMode.','')+' opacity='+Math.round(l.opacity*10)/10+(isG?' fill='+readFill(doc,l):'')+' bounds='+boundsOf(l)+' effects='+fx);if(isG)describeTree(doc,l.layers,prefix+'  ');}}
+// A present, enabled Stroke (frameFX) still on the layer. The group must end with NONE; an empty
+// effects container left by the non-destructive removal is not a Stroke and reads false here.
+function hasStroke(doc,layer){doc.activeLayer=layer;var L=executeActionGet(targetRef());if(!L.hasKey(sid('layerEffects')))return false;var fx=L.getObjectValue(sid('layerEffects'));function on(o){return !(o.hasKey(sid('present'))&&!o.getBoolean(sid('present')))&&!(o.hasKey(sid('enabled'))&&!o.getBoolean(sid('enabled')));}if(fx.hasKey(cid('FrFX'))&&on(fx.getObjectValue(cid('FrFX'))))return true;if(fx.hasKey(sid('frameFXMulti'))){var li=fx.getList(sid('frameFXMulti'));for(var j=0;j<li.count;j++){if(on(li.getObjectValue(j)))return true;}}return false;}
+function describeTree(doc,layers,prefix){for(var i=0;i<layers.length;i++){var l=layers[i];var isG=l.typename==='LayerSet';var fx=hasStroke(doc,l);note(prefix+(isG?'group "':'layer "')+l.name+'" blend='+String(l.blendMode).replace('BlendMode.','')+' opacity='+Math.round(l.opacity*10)/10+(isG?' fill='+readFill(doc,l):'')+' bounds='+boundsOf(l)+' effects='+fx);if(isG)describeTree(doc,l.layers,prefix+'  ');}}
 function savePng(doc,name){app.activeDocument=doc;if(doc.bitsPerChannel!==BitsPerChannelType.EIGHT){doc.bitsPerChannel=BitsPerChannelType.EIGHT;}doc.saveAs(new File(OUTDIR+'/'+name+'.png'),new PNGSaveOptions(),true,Extension.LOWERCASE);}
 
 var CASES=[]; function add(c){CASES.push(c);}

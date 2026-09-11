@@ -20,28 +20,30 @@
  *      Outer Stroke sits under the layer.  For any other group mode, opacity, or fill, the
  *      disc would show through the content, so the content's own alpha is subtracted and only
  *      the ring is kept;
- *   4. place it directly below the group, give it the Stroke's own blend mode, clear the
- *      group's style, and restore the group's blend mode, opacity, and fill (Clear Layer
- *      Style silently resets the last two to 100).
+ *   4. place it directly below the group, give it the Stroke's own blend mode, and remove the
+ *      group's Stroke non-destructively: a setd that rewrites the group's style with an empty
+ *      Stroke slot.  Unlike Clear Layer Style, this touches nothing else, so the group keeps
+ *      its blend mode, opacity, fill, and every advanced blending option (knockout, Blend If,
+ *      transparency-shapes flag, and the rest) with no reset and no restore.
  *
  * Measured fidelity against the live render (premultiplied, 256 px fixtures, 2026-09-11):
  *   exact (0 px)   Pass Through / Normal groups at 100/100; every one of the 27 stroke blend
- *                  modes; Screen, Difference, and Lighten groups; a Screen group at 50%; fill 0;
- *                  smart-object children; rectangles and partial-alpha content; sizes 0.5-250;
+ *                  modes; the occluding group modes; fill 0; smart-object children; rectangles
+ *                  and hard, concave, and 55%-partial-alpha content; sizes 0.5-250;
  *                  RGB/Gray/CMYK/Lab, 8/16/32 bit.
  *   edge only      the antialiased join between content and stroke can differ by up to about
- *                  70/255 on a one-pixel band for: Hue and Overlay groups (and other
- *                  non-occluding modes), group opacity or fill below 100, knockout, and a
- *                  Stroke at less than 100% opacity.  Inherent to a stroke on its own layer.
+ *                  70/255 on a one-pixel band for: the non-occluding group modes (Screen, Hue,
+ *                  Overlay, and the rest), group opacity or fill below 100, knockout, and a
+ *                  Stroke at less than 100% opacity.  It widens to the whole silhouette when the
+ *                  content is itself partial-alpha everywhere (a gradient ramp).  This band is
+ *                  irreducible for a stroke on its own layer: the live render composites the
+ *                  content and stroke in one buffer and antialiases their shared boundary with a
+ *                  single coverage, while two layers composite it twice.  See
+ *                  STROKE_FIDELITY_MECHANISM_INVESTIGATION.md.
  *   refused        Inside and Center strokes (Create Layers is exact for Inside on a group),
  *                  gradient and pattern strokes, styles with any other effect, masked or
  *                  clipped groups, and groups containing a text layer (fine concave detail
  *                  diverges by up to 40/255).
- *   caveat         Knockout cannot be read back in 27.9.1 and Clear Layer Style discards it,
- *                  so a group's knockout is reset to None by this script.  Set
- *                  PRESERVE_BLENDING_OPTIONS to true to disable the Stroke in place instead of
- *                  clearing the style: every blending option survives, at the cost of a
- *                  switched-off Stroke remaining in the group's style.
  *
  * Use: select the group, then File > Scripts > Browse... (Rastrokizer.jsx)  One history step.
  * ExtendScript (ES3).
@@ -50,8 +52,6 @@
 #target photoshop
 
 $.global.Rastrokizer = (function () {
-
-    var PRESERVE_BLENDING_OPTIONS = false;
 
     function cid(s) { return charIDToTypeID(s); }
     function sid(s) { return stringIDToTypeID(s); }
@@ -84,22 +84,6 @@ $.global.Rastrokizer = (function () {
         var d = new ActionDescriptor();
         d.putReference(cid('null'), targetRef());
         executeAction(eventId, d, DialogModes.NO);
-    }
-
-    function setLayerProps(doc, layer, build) {
-        doc.activeLayer = layer;
-        var to = new ActionDescriptor();
-        build(to);
-        var d = new ActionDescriptor();
-        d.putReference(cid('null'), targetRef());
-        d.putObject(cid('T   '), cid('Lyr '), to);
-        executeAction(cid('setd'), d, DialogModes.NO);
-    }
-
-    function setFill(doc, layer, percent) {
-        setLayerProps(doc, layer, function (to) {
-            to.putUnitDouble(sid('fillOpacity'), cid('#Prc'), percent);
-        });
     }
 
     function clearStyle(doc, layer) { onTarget(doc, layer, sid('disableLayerStyle')); }
@@ -147,25 +131,16 @@ $.global.Rastrokizer = (function () {
         setLayerEffects(doc, layer, fx);
     }
 
-    /* Switch the Stroke off in place (PRESERVE_BLENDING_OPTIONS): a nested setd replaces the
-     * whole FrFX object, so the read-back copy is written back with enabled=false.  Precision
-     * loss on a fractional size does not matter for an effect that no longer renders. */
-    function disableStroke(doc, layer, stroke) {
-        var off = new ActionDescriptor();
-        for (var i = 0; i < stroke.count; i++) {
-            var key = stroke.getKey(i);
-            var type = stroke.getType(key);
-            if (t2s(key) === 'enabled') { off.putBoolean(key, false); continue; }
-            if (type === DescValueType.BOOLEANTYPE) { off.putBoolean(key, stroke.getBoolean(key)); }
-            else if (type === DescValueType.ENUMERATEDTYPE) { off.putEnumerated(key, stroke.getEnumerationType(key), stroke.getEnumerationValue(key)); }
-            else if (type === DescValueType.UNITDOUBLE) { off.putUnitDouble(key, stroke.getUnitDoubleType(key), stroke.getUnitDoubleValue(key)); }
-            else if (type === DescValueType.DOUBLETYPE) { off.putDouble(key, stroke.getDouble(key)); }
-            else if (type === DescValueType.INTEGERTYPE) { off.putInteger(key, stroke.getInteger(key)); }
-            else if (type === DescValueType.OBJECTTYPE) { off.putObject(key, stroke.getObjectType(key), stroke.getObjectValue(key)); }
-        }
+    /* Remove the group's Stroke without disturbing anything else.  A setd on Lefx replaces the
+     * whole style object, so writing a style that holds only an empty Stroke list (frameFXMulti)
+     * leaves no Stroke and no other effect, while the layer's own blending options -- blend mode,
+     * opacity, fill, knockout, Blend If, the transparency-shapes flag -- are separate from Lefx
+     * and ride through untouched.  Clear Layer Style, by contrast, resets opacity, fill, and
+     * knockout, which is why it is used only on the throwaway copy, never on the group itself. */
+    function removeStroke(doc, layer) {
         var fx = new ActionDescriptor();
         fx.putUnitDouble(cid('Scl '), cid('#Prc'), 100);
-        fx.putObject(cid('FrFX'), cid('FrFX'), off);
+        fx.putList(sid('frameFXMulti'), new ActionList());
         setLayerEffects(doc, layer, fx);
     }
 
@@ -286,9 +261,6 @@ $.global.Rastrokizer = (function () {
         var strokeMode = enumOf(stroke, 'mode') || 'normal';
         return {
             stroke: stroke,
-            blend: group.blendMode,
-            opacity: opacity,
-            fill: fill,
             strokeMode: strokeMode,
             // The solid disc is exact when opaque content at Pass Through / Normal covers it.
             // Below 100% opacity or fill the disc bleeds through by up to (1 - value) * 255,
@@ -324,14 +296,7 @@ $.global.Rastrokizer = (function () {
             && STROKE_MODE_TO_DOM[found.strokeMode]) {
             layer.blendMode = BlendMode[STROKE_MODE_TO_DOM[found.strokeMode]];
         }
-        if (PRESERVE_BLENDING_OPTIONS) {
-            disableStroke(doc, group, found.stroke);
-        } else {
-            clearStyle(doc, group);               // resets opacity and fill to 100: restore them
-            group.blendMode = found.blend;
-            group.opacity = found.opacity;
-            setFill(doc, group, found.fill);
-        }
+        removeStroke(doc, group);                 // empties the Stroke slot; keeps every blending option
         doc.activeLayer = layer;
         return layer;
     }
