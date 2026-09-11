@@ -1,12 +1,12 @@
 # Rastrokizer
 
-Move a Photoshop group's Outside stroke onto its own pixel layer, faithfully, in one history step.
+Move a Photoshop group's outside stroke onto its own pixel layer, faithfully, in one history step.
 
 <p align="center"><img src="Comparison.png" alt="Three stacked renders of the words 'billion-dollar company btw' in white with a red outline. Top, the live group stroke. Middle, the broken Create Layers result, with the stroke thickened and clipped at the corners. Bottom, the Rastrokizer result, which matches the live one." width="460"></p>
 
 ## Why
 
-*Layer > Layer Style > Create Layers* is meant to turn a layer's live effects into ordinary layers, but on a **group** it gets the Outside stroke wrong — and has since at least Photoshop 23.4.1 (2022), still unfixed in Photoshop 2026 (27.9.1). It rebuilds the stroke from the group's finished composite and clips it to the original bounds, so an 8 px stroke comes out about 8 px along straight edges but roughly 16 px into the corners: doubled and squared (the middle panel above). *Merge Group*, *Rasterize Layer Style*, and *Create Layers* on a plain layer are all exact, so Rastrokizer builds the stroke layer from those instead (the bottom panel).
+*Layer > Layer Style > Create Layers* is meant to turn a layer's live effects into ordinary layers, but on a **group** it gets the outside stroke wrong — and has since at least Photoshop 23.4.1 (2022), still unfixed in Photoshop 2026 (27.9.1). It rebuilds the stroke from the group's finished composite and clips it to the original bounds, so an 8 px stroke comes out about 8 px along straight edges but roughly 16 px into the corners: doubled and squared (the middle panel above). *Merge Group*, *Rasterize Layer Style*, and *Create Layers* on a plain layer are all exact, so Rastrokizer builds the stroke layer from those instead (the bottom panel).
 
 ## Use
 

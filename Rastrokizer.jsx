@@ -1,9 +1,9 @@
-/* Rastrokizer: put a group's Outside stroke on its own layer, faithfully.
+/* Rastrokizer: put a group's outside stroke on its own layer, faithfully.
  *
  * Why: in Photoshop 27.9.1, Layer > Layer Style > Create Layers on a GROUP does not build its
  * effect layers from the group's children.  It rebuilds them from the group's composite with
  * the whole style already applied, then clips each one to the group's original effect bounds.
- * An Outside stroke therefore comes out about twice as wide: the clip hides that along straight
+ * An outside stroke therefore comes out about twice as wide: the clip hides that along straight
  * edges, and the stroke bulges out square toward corners and curves.  Merge Group and
  * Rasterize Layer Style are exact on groups, and so is Create Layers on a plain layer, so this
  * builds the layer from those instead:

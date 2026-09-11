@@ -2,7 +2,7 @@
 
 Every step Rastrokizer performs is an ordinary Photoshop command, so the same result can be recorded as an Action. In one respect the Action is more capable: *Create Layers* is exact on a *plain* layer and can be recorded through *Insert Menu Item*, which makes the construction color, gradient, and pattern agnostic — so an Action handles gradient and pattern strokes, and Inside strokes, that the script refuses. Its one limitation is the reverse: an Action cannot restore opacity and fill dynamically, so it is faithful only for groups at 100 % opacity and fill.
 
-With a document open, a group carrying an Outside stroke selected, and the *Layers* panel visible:
+With a document open, a group carrying an outside stroke selected, and the *Layers* panel visible:
 
 1. *Window > Actions*, then from the panel menu *New Set…*, then *New Action…* and *Record*.
 2. *Layer > Layer Style > Copy Layer Style*.

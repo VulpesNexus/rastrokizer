@@ -49,8 +49,8 @@ Rastrokizer refuses the cases below with a dialog rather than convert them wrong
 | Inside and Center strokes | The layer construction cannot match Inside geometry — a fill-0 ring reconstruction diverges by more than 1600 px. | *Create Layers* is exact for an Inside stroke on a group; use it, or the Action recipe in [AS_AN_ACTION.md](AS_AN_ACTION.md). |
 | Gradient and pattern strokes | The recolor step is a solid *Color Overlay*, which cannot carry a gradient or a pattern. | The Action recipe reproduces them exactly, because Photoshop renders the stroke itself. |
 | A live text child | Fine concave glyph detail diverges by up to 40/255 — the same edge mechanism at a geometry the rebuilt stroke antialiases slightly differently. | Rasterize the text first, then convert, or use the Action recipe. |
-| `transparencyShapesLayer` off | The flag changes where Photoshop inserts the effect in its compositing graph and makes the Outside stroke vanish; that is a different, unsolved geometry, not the standard Outside stroke. | Leave the stroke live on the group. |
-| Any other effect in the style | The construction is proven only for a lone Outside stroke; other effects were not verified to survive it. | Remove or rasterize the other effects first. |
+| `transparencyShapesLayer` off | The flag changes where Photoshop inserts the effect in its compositing graph and makes the outside stroke vanish; that is a different, unsolved geometry, not the standard outside stroke. | Leave the stroke live on the group. |
+| Any other effect in the style | The construction is proven only for a lone outside stroke; other effects were not verified to survive it. | Remove or rasterize the other effects first. |
 | Masked or clipped groups | Out of the verified scope; the mask and clip interactions with the separated layer were not proven safe. | — |
 
 The text, gradient, pattern, and Inside refusals are conservative on purpose: rather than emit a result that is close but wrong, the script declines and points at the route that is exact.
